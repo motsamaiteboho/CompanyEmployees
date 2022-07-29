@@ -1,5 +1,7 @@
 using CompanyEmployees.Extensions;
+using Contracts;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using NLog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,15 +15,25 @@ builder.Services.ConfigureIISIntegration();
 builder.Services.ConfigureLoggerService();
 builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureServiceManager();
-builder.Services.AddControllers()
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{ 
+    options.SuppressModelStateInvalidFilter = true; 
+});
+builder.Services.AddControllers(config => { 
+    config.RespectBrowserAcceptHeader = true;
+    config.ReturnHttpNotAcceptable = true;
+}).AddXmlDataContractSerializerFormatters()
+    .AddCustomCSVFormatter()
     .AddApplicationPart(typeof(CompanyEmployees.Presentation.AssemblyReference)
     .Assembly);
 builder.Services.AddAutoMapper(typeof(Program));
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment()) 
-    app.UseDeveloperExceptionPage();
-else
+var logger = app.Services.GetRequiredService<ILoggerManager>();
+app.ConfigureExceptionHandler(logger); 
+
+if (app.Environment.IsProduction())
     app.UseHsts();
 
 app.UseHttpsRedirection();
