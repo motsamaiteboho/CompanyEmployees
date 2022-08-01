@@ -1,11 +1,14 @@
 using CompanyEmployees.Extensions;
 using CompanyEmployees.Presentation.ActionFilters;
+using CompanyEmployees.Utility;
 using Contracts;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Options;
 using NLog;
+using Service.DataShaping;
+using Shared.DataTransferObjects;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,12 +21,15 @@ builder.Services.ConfigureIISIntegration();
 builder.Services.ConfigureLoggerService();
 builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureServiceManager();
-
+builder.Services.AddScoped<IDataShaper<EmployeeDto>, DataShaper<EmployeeDto>>();
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 { 
     options.SuppressModelStateInvalidFilter = true; 
 });
+builder.Services.AddScoped<ValidateMediaTypeAttribute>();
 builder.Services.AddScoped<ValidationFilterAttribute>();
+builder.Services.AddScoped<IEmployeeLinks, EmployeeLinks>();
+builder.Services.AddCustomMediaTypes();
 builder.Services.AddControllers(config => { 
     config.RespectBrowserAcceptHeader = true;
     config.ReturnHttpNotAcceptable = true;
