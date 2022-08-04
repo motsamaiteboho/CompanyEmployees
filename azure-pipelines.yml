@@ -5,6 +5,6 @@ pool:
 variables:
  buildConfiguration: 'Release'
 steps:
-- task: UseDotNet@2
+- task: UseDotNet@6
 - script: dotnet build --configuration $(buildConfiguration)
   displayName: 'dotnet build $(buildConfiguration)'
