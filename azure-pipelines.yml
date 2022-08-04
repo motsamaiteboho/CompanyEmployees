@@ -1,10 +1,13 @@
 trigger:
 - master
 pool:
- vmImage: 'ubuntu-latest'
+ vmImage: 'windows-2022'
 variables:
  buildConfiguration: 'Release'
 steps:
-- task: UseDotNet@6
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: 6.x
 - script: dotnet build --configuration $(buildConfiguration)
   displayName: 'dotnet build $(buildConfiguration)'
