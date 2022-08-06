@@ -4,17 +4,21 @@ using CompanyEmployees.Presentation.ModelBinders;
 using Service.Contracts;
 using Shared.DataTransferObjects;
 using CompanyEmployees.Presentation.ActionFilters;
+using Marvin.Cache.Headers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CompanyEmployees.Presentation.Controllers
 {
     [Route("api/companies")]
     [ApiController]
+    [ApiExplorerSettings(GroupName = "v1")]
     public class CompaniesController : ControllerBase
     {
         private readonly IServiceManager _service; 
         public CompaniesController(IServiceManager service) => _service = service;
 
-        [HttpGet]
+        [HttpGet(Name = "GetCompanies")]
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> GetCompanies()
         {
             var companies = await _service.CompanyService.GetAllCompaniesAsync(trackChanges: false);
@@ -23,6 +27,8 @@ namespace CompanyEmployees.Presentation.Controllers
         }
 
         [HttpGet("{id:guid}", Name = "CompanyById")]
+        [HttpCacheExpiration(CacheLocation = CacheLocation.Public, MaxAge = 60)]
+        [HttpCacheValidation(MustRevalidate = false)]
         public async Task<IActionResult> GetCompany(Guid id)
         {
             var company = await _service.CompanyService.GetCompanyAsync(id, trackChanges: false);
@@ -39,7 +45,7 @@ namespace CompanyEmployees.Presentation.Controllers
             return Ok(companies);
         }
 
-        [HttpPost]
+        [HttpPost(Name = "CreateCompany")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> CreateCompany([FromBody] CompanyForCreationDto company)
         {
@@ -72,6 +78,14 @@ namespace CompanyEmployees.Presentation.Controllers
             await _service.CompanyService.UpdateCompanyAsync(id, company, trackChanges: true);
 
             return NoContent();
+        }
+
+        [HttpOptions]
+        public IActionResult GetCompaniesOptions()
+        {
+            Response.Headers.Add("Allow", "GET, OPTIONS, POST, PUT, DELETE");
+
+            return Ok();
         }
     }
 }
